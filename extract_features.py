@@ -389,22 +389,38 @@ def main(_):
     for result in estimator.predict(input_fn, yield_single_examples=True):
       unique_id = int(result["unique_id"])
       feature = unique_id_to_feature[unique_id]
+      
+      # output_json = collections.OrderedDict()
+      # output_json["linex_index"] = unique_id
+      # all_features = []
+      # for (i, token) in enumerate(feature.tokens):
+      #   all_layers = []
+      #   for (j, layer_index) in enumerate(layer_indexes):
+      #     layer_output = result["layer_output_%d" % j]
+      #     layers = collections.OrderedDict()
+      #     layers["index"] = layer_index
+      #     layers["values"] = [
+      #         round(float(x), 6) for x in layer_output[i:(i + 1)].flat
+      #     ]
+      #     all_layers.append(layers)
+      #   features = collections.OrderedDict()
+      #   features["token"] = token
+      #   features["layers"] = all_layers
+      #   all_features.append(features)
+      # output_json["features"] = all_features
+      # writer.write(json.dumps(output_json) + "\n")
+      
+      # modified by tangbin
+      # sample = dict()
       output_json = collections.OrderedDict()
       output_json["linex_index"] = unique_id
       all_features = []
       for (i, token) in enumerate(feature.tokens):
-        all_layers = []
-        for (j, layer_index) in enumerate(layer_indexes):
-          layer_output = result["layer_output_%d" % j]
-          layers = collections.OrderedDict()
-          layers["index"] = layer_index
-          layers["values"] = [
-              round(float(x), 6) for x in layer_output[i:(i + 1)].flat
-          ]
-          all_layers.append(layers)
+        last_layer = result['layer_output_%d' % layer_indexes.index(-1)]
+        values = [round(float(x), 9) for x in last_layer[i:(i + 1)].flat]
         features = collections.OrderedDict()
         features["token"] = token
-        features["layers"] = all_layers
+        features["output"] = values
         all_features.append(features)
       output_json["features"] = all_features
       writer.write(json.dumps(output_json) + "\n")
